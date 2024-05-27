@@ -1,5 +1,6 @@
 ### clear working environment before starting
 rm(list = ls(all.names = T))
+gc()
 
 ###  follow the tutorial
 library(ccviR)
