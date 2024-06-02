@@ -2,6 +2,8 @@
 library(ENMwrap)
 library(megaSDM)
 library(raster)
+library(dismo)
+library(dplyr)
 
 # clear working environment
 rm(list = ls(all.names = T))
@@ -58,8 +60,10 @@ spplist <- c('Bombina orientalis',
 
 # get data
 OccurrenceCollection(spplist = spplist,
-                     output = 'occs/raw',
+                     output = 'occs_test_workflow/raw',
                      trainingarea = envs[[1]])
 
 
 ##### part 3 ::: get background data ---------------------------------------------------
+# get random background points
+bg <- randomPoints(mask = envs[[1]], n = 10000) %>% as.data.frame()
