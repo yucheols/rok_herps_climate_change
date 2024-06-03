@@ -153,6 +153,15 @@ testsp <- test_multisp(taxon.list = spplist,
 # check results
 print(testsp$metrics)
 print(testsp$models)
+print(testsp$preds)
+print(testsp$contrib)
+print(testsp$taxon.list)
+
+# plot predictions
+# should fix the package code at some point to remove the rgdal and raster dependencies....so that I can directly use the SpatVector object loaded earlier....
+# but I dont have enough time now so this will have to do
+rok <- rgdal::readOGR('poly/KOR_adm0.shp')
+plot_preds(preds = testsp$preds, poly = rok, pred.names = spplist)
 
 # make predictions under current climate
 
