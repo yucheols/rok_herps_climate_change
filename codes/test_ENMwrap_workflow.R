@@ -1,4 +1,4 @@
-### test workflow
+### test workflow == probably need to update the ENMwrap package at some point to remove raster and rgdal dependencies.....
 library(ENMwrap)
 library(megaSDM)
 library(raster)
@@ -7,12 +7,12 @@ library(plyr)
 library(dplyr)
 library(readr)
 
-# set random seed for reproducibility of random sampling elements
-set.seed(333)
-
 # clear working environment
 rm(list = ls(all.names = T))
 gc()
+
+# set random seed for reproducibility of random sampling elements
+set.seed(333)
 
 # prevent encoding error
 Sys.getlocale()
@@ -45,11 +45,12 @@ for (i in 1:nlayers(envs)) {
 ##### part 2 ::: get occurrence data ---------------------------------------------------
 
 # make a list of species for draft modeling
+# note B.gargarizans is used for B.sachalinensis and, D.immaculatus is used for D.suweonensis....just to follow the nomenclature recognized by the package
 spplist <- c('Bombina orientalis',
              'Bufo stejnegeri',
-             'Bufo sachalinensis',
+             'Bufo gargarizans',
              'Dryophytes japonicus',
-             'Dryophytes suweonensis',
+             'Dryophytes immaculatus',
              'Glandirana emeljanovi',
              'Hynobius leechii',
              'Hynobius quelpaertensis',
@@ -76,7 +77,7 @@ occs_all <- list.files(path = 'occs_test_workflow/raw', pattern = '.csv', full.n
 
 colnames(occs_all) = c('species', 'long', 'lat')
 
-# sort compiled data into two column dataframe by species
+# sort compiled data into two column (long, lat) dataframe by species
 occs_list <- list(occs_all %>% filter(species == spplist[[1]]) %>% select(2,3),
                   occs_all %>% filter(species == spplist[[2]]) %>% select(2,3),
                   occs_all %>% filter(species == spplist[[3]]) %>% select(2,3),
@@ -108,3 +109,37 @@ for (i in 1:length(thin)) {
 ##### part 3 ::: get background data ---------------------------------------------------
 # get random background points
 bg <- randomPoints(mask = envs[[1]], n = 10000) %>% as.data.frame()
+colnames(bg) = c('long', 'lat')
+head(bg)
+
+
+##### part 4 ::: select environmental variables ---------------------------------------------------
+# may need to revise this part later on to better reflect species-specific climatic requirements....but this should be enough for now to test the workflow
+
+# extract pixel values
+vals <- raster::extract(envs, bg) %>% as.data.frame()
+head(vals)
+
+# generate correlation matrix
+cormat <- cor(vals, method = 'pearson')
+print(cormat)
+
+# run correlation test
+testcor <- caret::findCorrelation(cormat, cutoff = abs(0.7))
+print(testcor)
+
+# reduce the env dataset
+envs.subs <- raster::dropLayer(envs, testcor) 
+print(envs.subs)
+
+
+##### part 5 ::: test candidate models per species  ---------------------------------------------------
+testsp <- test_multisp(taxon.list = spplist,
+                       occs.list = occs_list,
+                       envs = envs.subs,
+                       bg = bg,
+                       tune.args = list(fc = c('LQ','LQHP'), rm = c(1, 1.5)),
+                       partitions = 'block',
+                       partition.settings = list(orientation = 'lat_lon'),
+                       type = 'type1')
+
