@@ -1,4 +1,10 @@
 ### test workflow == probably need to update the ENMwrap package at some point to remove raster and rgdal dependencies.....
+
+# clear working environment
+rm(list = ls(all.names = T))
+gc()
+
+# load packages
 library(ENMwrap)
 library(megaSDM)
 library(raster)
@@ -7,10 +13,6 @@ library(plyr)
 library(dplyr)
 library(readr)
 
-# clear working environment
-rm(list = ls(all.names = T))
-gc()
-
 # set random seed for reproducibility of random sampling elements
 set.seed(333)
 
@@ -18,6 +20,7 @@ set.seed(333)
 Sys.getlocale()
 Sys.setlocale("LC_CTYPE", ".1251")
 Sys.getlocale()
+
 
 ##### part 1 ::: get climate data ---------------------------------------------------
 
@@ -46,6 +49,7 @@ for (i in 1:nlayers(envs)) {
 
 # make a list of species for draft modeling
 # note B.gargarizans is used for B.sachalinensis and, D.immaculatus is used for D.suweonensis....just to follow the nomenclature recognized by the package
+# name matching is required for data filtering and downstream model testing. If the names dont match the model testing step will throw errors
 spplist <- c('Bombina orientalis',
              'Bufo stejnegeri',
              'Bufo gargarizans',
@@ -134,6 +138,9 @@ print(envs.subs)
 
 
 ##### part 5 ::: test candidate models per species  ---------------------------------------------------
+
+# fit models per species == may need to increase the feature class (fc) and regularization (rm) combinations for actual application
+# for the code below (testing two features and two regularizations), it takes aproximately 2~3 minutes per species
 testsp <- test_multisp(taxon.list = spplist,
                        occs.list = occs_list,
                        envs = envs.subs,
@@ -142,4 +149,11 @@ testsp <- test_multisp(taxon.list = spplist,
                        partitions = 'block',
                        partition.settings = list(orientation = 'lat_lon'),
                        type = 'type1')
+
+# check results
+print(testsp$metrics)
+print(testsp$models)
+
+# make predictions under current climate
+
 
