@@ -1,3 +1,3 @@
-"","scientific_name","lat","long","year","region"
-"1","Pseudemys peninsularis",37.6503830013406,126.76966999983,"2019","경기도"
-"2","Pseudemys peninsularis",35.123190000861,129.018469999507,"2019","부산광역시"
+"","scientific_name","lat","long","year","region","source"
+"1","Pseudemys peninsularis",37.6503830013406,126.76966999983,"2019","경기도","NES"
+"2","Pseudemys peninsularis",35.123190000861,129.018469999507,"2019","부산광역시","NES"
