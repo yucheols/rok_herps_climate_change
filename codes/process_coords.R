@@ -2,7 +2,7 @@
 
 # prevent encoding errors
 Sys.getlocale()
-Sys.setlocale("LC_ALL","korean")
+Sys.setlocale("LC_CTYPE", ".1251")
 Sys.getlocale()
 
 # load packages
@@ -54,6 +54,8 @@ for (i in 1:length(list_sp)) {
 
 
 #####  Get GBIF data via the megaSDM package
+
+# get species list == 240707 22:05 PM
 list_sp_gbif <- c('Bombina orientalis',
                   'Bufo gargarizans',
                   'Bufo stejnegeri',
@@ -99,3 +101,25 @@ list_sp_gbif <- c('Bombina orientalis',
                   'Pelodiscus sinensis',
                   'Pelodiscus maackii',
                   'Mauremys sinensis')
+
+# collect occurrence points
+OccurrenceCollection(spplist = list_sp_gbif, 
+                     output = 'occs_compiled/GBIF_raw',
+                     trainingarea = c(125.0818, 130.9404, 33.11208, 38.61215))
+
+# sort out coordinates
+gbif.coords <- list.files(path = 'occs_compiled/GBIF_raw', pattern = '.csv', full.names = T) %>%
+  lapply(read_csv) %>%
+  plyr::rbind.fill() %>%
+  dplyr::select(4,5,6)
+
+gbif.coords$source = 'GBIF'
+colnames(gbif.coords) = c('scientific_name', 'lat', 'long', 'source')
+head(gbif.coords)
+
+# export per species
+for (i in 1:length(list_sp_gbif[-c(6,19)])) {
+  per_sp <- gbif.coords %>% dplyr::filter(scientific_name == list_sp_gbif[-c(6,19)][[i]])
+  file_name <- paste0('occs_compiled/GBIF_per_sp/', list_sp_gbif[-c(6,19)][[i]], '.csv')
+  write.csv(per_sp, file_name)
+}
