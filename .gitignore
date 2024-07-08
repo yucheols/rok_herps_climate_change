@@ -48,3 +48,6 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 envs/raw
+
+future_ssp/*
+!future_ssp/wc2.1_30s_bioc_HadGEM3-GC31-LL_ssp585_2081-2100.tif
