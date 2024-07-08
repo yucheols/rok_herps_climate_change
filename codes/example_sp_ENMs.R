@@ -48,6 +48,9 @@ rev(sort(get_contrib[[3]]))  # bio16 (20.64 %) ... bio18 (17.66 %) == precip of 
 rev(sort(get_contrib[[4]]))  # bio14 (17.84 %) ... bio2 (16.23 %) == precip of driest month & mean diurnal range
 rev(sort(get_contrib[[5]]))  # bio3 (34.08 %) ... slope (16.62 %) == isothermality and slope
 
+# export loading contributions
+write.csv(get_contrib, 'output_other/current_envs_raster_PC_var_contrib.csv')
+
 # set new env object
 envs <- envs.pca$rasters[[1:5]]
 print(envs)
@@ -98,6 +101,9 @@ bg <- randomPoints(mask = envs[[1]], n = 10000) %>% as.data.frame()
 colnames(bg) = c('long', 'lat')
 head(bg)
 
+# export
+write.csv(bg, 'bg/bg.csv')
+
 
 ##### part 4 ::: test candidate models per species  ----------
 # model tuning
@@ -126,20 +132,48 @@ saveRDS(test.mod, 'output_rds/example_sp_ENMs_20240708.rds')
 ##### part 5 ::: variable importance  ----------
 # B. stejnegeri
 print(test.mod$contrib[[1]])
+write.csv(test.mod$contrib[[1]], 'output_other/amp_current_ENMs_varimp.csv')
 
 # G. brevicauda 
 print(test.mod$contrib[[2]])
+write.csv(test.mod$contrib[[2]], 'output_other/rep_current_ENMs_varimp.csv')
 
 
 ##### part 6 ::: response curves  ----------
-## get plot data
-# B.stejnegeri
+### B.stejnegeri
+# get plot data
 amp.resp.data <- respDataPull(sp.name = 'B.stejnegeri', model = test.mod$models[[1]], names.var = names(envs))
 head(amp.resp.data)
 
-# G.brevicauda
+# plot
+amp.resp.plot <- plot_response(resp.data = amp.resp.data)
+amp.resp.plot +
+  theme(axis.title = element_text(size = 14, face = 'bold'),
+        axis.title.x = element_text(margin = margin(t = 20)),
+        axis.title.y = element_text(margin = margin(r = 20)),
+        axis.text = element_text(size = 12),
+        strip.text = element_text(size = 12),
+        legend.title = element_text(size = 14, face = 'bold'),
+        legend.text = element_text(size = 14, face = 'italic'),
+        legend.position = 'top')
+
+
+### G.brevicauda
+# get plot data
 rep.resp.data <- respDataPull(sp.name = 'G.brevicauda', model = test.mod$models[[2]], names.var = names(envs))
-head(rep.resp.data)
+head(rep.resp.data) 
+
+# plot
+rep.resp.plot <- plot_response(resp.data = rep.resp.data)
+rep.resp.plot +
+  theme(axis.title = element_text(size = 14, face = 'bold'),
+        axis.title.x = element_text(margin = margin(t = 20)),
+        axis.title.y = element_text(margin = margin(r = 20)),
+        axis.text = element_text(size = 12),
+        strip.text = element_text(size = 12),
+        legend.title = element_text(size = 14, face = 'bold'),
+        legend.text = element_text(size = 14, face = 'italic'),
+        legend.position = 'top')
 
 
 ##### part 7 ::: future layer prep == HadGEM3.GC31.LL_ssp585  ----------
@@ -183,6 +217,9 @@ rev(sort(get_contrib_fut[[3]]))  # bio18 (17.35 %) ... bio16 (16.70 %) == precip
 rev(sort(get_contrib_fut[[4]]))  # bio14 (33.56 %) ... bio17 (21.47 %) == precip of driest months
 rev(sort(get_contrib_fut[[5]]))  # bio3 (38.83 %) ... slope (22.14 %) == isothermality and annual precip
 
+# export loading contributions
+write.csv(get_contrib_fut, 'output_other/future_envs_raster_PC_var_contrib.csv')
+
 # set new future env object
 fut.envs <- fut.envs.pca$rasters
 print(fut.envs)
@@ -203,3 +240,21 @@ plot(amp.fut.pred)
 # G. brevicauda
 rep.fut.pred <- dismo::predict(object = test.mod$models[[2]], x = fut.envs)
 plot(rep.fut.pred)
+
+##### part 9 ::: plot current & future side by side  ----------
+# polygon
+rok <- rgdal::readOGR('poly/KOR_adm1.shp')
+
+# plot amphibian preds
+amp.preds <- raster::stack(test.mod$preds[[1]], amp.fut.pred)
+names(amp.preds) = c('Current', 'ssp585_2090')
+
+amp.preds.plot <- plot_preds(preds = amp.preds, poly = rok, pred.names = names(amp.preds))
+print(amp.preds.plot)
+
+# plot reptile preds
+rep.preds <- raster::stack(test.mod$preds[[2]], rep.fut.pred)
+names(rep.preds) = c('Current', 'ssp585_2090')
+
+rep.preds.plot <- plot_preds(preds = rep.preds, poly = rok, pred.names = names(rep.preds))
+print(rep.preds.plot)
