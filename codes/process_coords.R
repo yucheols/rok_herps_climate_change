@@ -1,5 +1,9 @@
 ##### process coordinates for the project
 
+# clear working environment
+rm(list = ls(all.names = T))
+gc()
+
 # prevent encoding errors
 Sys.getlocale()
 Sys.setlocale("LC_CTYPE", ".1251")
