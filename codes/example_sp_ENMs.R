@@ -157,6 +157,8 @@ amp.resp.plot +
         legend.text = element_text(size = 14, face = 'italic'),
         legend.position = 'top')
 
+# save response plot
+ggsave('plots/example_sp_ENMs/amp_resp.png', width = 30, height = 22, dpi = 800, units = 'cm')
 
 ### G.brevicauda
 # get plot data
@@ -175,6 +177,8 @@ rep.resp.plot +
         legend.text = element_text(size = 14, face = 'italic'),
         legend.position = 'top')
 
+# save response plot
+ggsave('plots/example_sp_ENMs/rep_resp.png', width = 30, height = 22, dpi = 800, units = 'cm')
 
 ##### part 7 ::: future layer prep == HadGEM3.GC31.LL_ssp585  ----------
 # import future climate layers
@@ -245,16 +249,78 @@ plot(rep.fut.pred)
 # polygon
 rok <- rgdal::readOGR('poly/KOR_adm1.shp')
 
-# plot amphibian preds
+### plot amphibian preds
 amp.preds <- raster::stack(test.mod$preds[[1]], amp.fut.pred)
 names(amp.preds) = c('Current', 'ssp585_2090')
 
 amp.preds.plot <- plot_preds(preds = amp.preds, poly = rok, pred.names = names(amp.preds))
 print(amp.preds.plot)
 
-# plot reptile preds
+# save plot
+ggsave('plots/example_sp_ENMs/amp_pred.png', width = 30, height = 14, dpi = 800, units = 'cm')
+
+### plot reptile preds
 rep.preds <- raster::stack(test.mod$preds[[2]], rep.fut.pred)
 names(rep.preds) = c('Current', 'ssp585_2090')
 
 rep.preds.plot <- plot_preds(preds = rep.preds, poly = rok, pred.names = names(rep.preds))
 print(rep.preds.plot)
+
+# save plot
+ggsave('plots/example_sp_ENMs/rep_pred.png', width = 30, height = 14, dpi = 800, units = 'cm')
+
+
+##### part 10 ::: threshold calculation, binary maps, area calculations  ----------
+##### function to calculate MaxEnt thresholds == from https://babichmorrowc.github.io/post/2019-04-12-sdm-threshold/
+sdm_threshold <- function(sdm, occs, type = "mtp", binary = FALSE){
+  occPredVals <- raster::extract(sdm, occs)
+  if(type == "mtp"){
+    thresh <- min(na.omit(occPredVals))
+  } else if(type == "p10"){
+    if(length(occPredVals) < 10){
+      p10 <- floor(length(occPredVals) * 0.9)
+    } else {
+      p10 <- ceiling(length(occPredVals) * 0.9)
+    }
+    thresh <- rev(sort(occPredVals))[p10]
+  }
+  sdm_thresh <- sdm
+  sdm_thresh[sdm_thresh < thresh] <- NA
+  if(binary){
+    sdm_thresh[sdm_thresh >= thresh] <- 1
+  }
+  return(sdm_thresh)
+}
+
+##### B. stejnegeri
+# calculate threshold
+amp.th <- sdm_threshold(sdm = amp.preds[[1]], occs = thin[[1]], type = 'p10', binary = F)
+print(minValue(amp.th))
+
+# get binary map
+amp.bins <- bin_maker(preds = amp.preds, th = rep(minValue(amp.th), nlayers(amp.preds)))
+plot(amp.bins)
+
+# plot
+amp.bins.plot <- plot_preds(preds = amp.bins, poly = rok, colors = rev(terrain.colors(1000)), pred.names = names(amp.bins))
+amp.bins.plot + theme(legend.position = 'none')
+
+# save plot
+ggsave('plots/example_sp_ENMs/amp_bin.png', width = 30, height = 14, dpi = 800, units = 'cm')
+
+##### G. brevicauda
+# calculate threshold
+rep.th <- sdm_threshold(sdm = rep.preds[[1]], occs = thin[[2]], type = 'p10', binary = F)
+print(minValue(rep.th))
+
+# get binary map
+rep.bins <- bin_maker(preds = rep.preds, th = rep(minValue(rep.th), nlayers(rep.preds)))
+plot(rep.bins)
+
+# plot
+rep.bins.plot <- plot_preds(preds = rep.bins, poly = rok, colors = rev(terrain.colors(1000)), pred.names = names(rep.bins))
+rep.bins.plot + theme(legend.position = 'none')
+
+# save plot
+ggsave('plots/example_sp_ENMs/rep_bin.png', width = 30, height = 14, dpi = 800, units = 'cm')
+
