@@ -308,6 +308,8 @@ amp.bins.plot + theme(legend.position = 'none')
 # save plot
 ggsave('plots/example_sp_ENMs/amp_bin.png', width = 30, height = 14, dpi = 800, units = 'cm')
 
+# calculate area
+
 ##### G. brevicauda
 # calculate threshold
 rep.th <- sdm_threshold(sdm = rep.preds[[1]], occs = thin[[2]], type = 'p10', binary = F)
@@ -324,3 +326,4 @@ rep.bins.plot + theme(legend.position = 'none')
 # save plot
 ggsave('plots/example_sp_ENMs/rep_bin.png', width = 30, height = 14, dpi = 800, units = 'cm')
 
+# calculate area
