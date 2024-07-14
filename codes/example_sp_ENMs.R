@@ -309,6 +309,8 @@ amp.bins.plot + theme(legend.position = 'none')
 ggsave('plots/example_sp_ENMs/amp_bin.png', width = 30, height = 14, dpi = 800, units = 'cm')
 
 # calculate area
+calc_ranges(bin.stack = amp.bins, bin.labs = c('current', 'future'), digits = 0)
+
 
 ##### G. brevicauda
 # calculate threshold
@@ -327,3 +329,37 @@ rep.bins.plot + theme(legend.position = 'none')
 ggsave('plots/example_sp_ENMs/rep_bin.png', width = 30, height = 14, dpi = 800, units = 'cm')
 
 # calculate area
+calc_ranges(bin.stack = rep.bins, bin.labs = c('current', 'future'), digits = 0)
+
+
+##### part 11 ::: export rasters  ----------
+
+### B.stejnegeri
+# continuous
+for (i in 1:nlayers(amp.preds)) {
+  r <- amp.preds[[i]]
+  file_name <- paste0('output_rasters/example_sp/B.stejnegeri/cont_', names(amp.preds)[i], '.tif')
+  writeRaster(r, filename = file_name, overwrite = T)
+}
+
+# binary
+for (i in 1:nlayers(amp.bins)) {
+  r <- amp.bins[[i]]
+  file_name <- paste0('output_rasters/example_sp/B.stejnegeri/bin_', names(amp.bins)[i], '.tif')
+  writeRaster(r, filename = file_name, overwrite = T)
+}
+
+### G.brevicauda
+# continuous
+for (i in 1:nlayers(rep.preds)) {
+  r <- rep.preds[[i]]
+  file_name <- paste0('output_rasters/example_sp/G.brevicauda/cont_', names(rep.preds)[i], '.tif')
+  writeRaster(r, filename = file_name, overwrite = T)
+}
+
+# binary
+for (i in 1:nlayers(rep.bins)) {
+  r <- rep.bins[[i]]
+  file_name <- paste0('output_rasters/example_sp/G.brevicauda/bin_', names(rep.bins)[i], '.tif')
+  writeRaster(r, filename = file_name, overwrite = T)
+}
