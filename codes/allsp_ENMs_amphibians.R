@@ -12,6 +12,7 @@ options(scipen = 999)
 
 # create directory to store outputs for this test
 #dir.create('all_amphibians')
+#dir.create('all_amphibians/occs_processed')
 #dir.create('all_amphibians/output')
 #dir.create('all_amphibians/output/contrib')
 #dir.create('all_amphibians/output/models')
@@ -121,6 +122,13 @@ occs.list <- list(occs %>% filter(scientific_name == unique(scientific_name)[1])
 # thin occurrence points
 occs.list.thin <- occs_thinner(occs_list = occs.list, envs = envs, long = 'long', lat = 'lat', spp_list = unique(occs$scientific_name))
 glimpse(occs.list.thin)
+
+# export processed occurrence points
+for (i in 1:length(occs.list.thin)) {
+  o <- occs.list.thin[[i]]
+  name <- paste0('all_amphibians/occs_processed/', taxon.list[[i]], '.csv')
+  write.csv(o, name)
+}
 
 # create a new taxon list since we dropped a few from the original list
 taxon.list <- list(unique(occs$scientific_name)[1],
