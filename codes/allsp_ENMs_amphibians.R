@@ -170,10 +170,10 @@ test.mod <- test_multisp(taxon.list = taxon.list,
                          type = 'type1')
 
 # save the model object
-#saveRDS(test.mod, 'all_amphibians/output_models/model_tuning.rds')
+#saveRDS(test.mod, 'all_amphibians/output/models/model_tuning.rds')
 
 # import saved model object
-#test.mod <- readRDS('all_amphibians/output_models/model_tuning.rds')
+#test.mod <- readRDS('all_amphibians/output/models/model_tuning.rds')
 
 #####  part 4b ::: view results ---------- 
 # print results
@@ -295,16 +295,16 @@ print(future.range.knp)
 
 #####  part 9 ::: GIS calculations ---------- 
 # current annual mean temperature
-cur.amp <- raster('envs/processed_full/bio1.tif')
+cur.amt <- raster('envs/processed_full/bio1.tif')
 
 # current annual precipitation
-cur.mat <- raster('envs/processed_full/bio12.tif')
+cur.map <- raster('envs/processed_full/bio12.tif')
 
 # future annual mean temperature
-fut.amp <- raster('future_ssp/processed/bio1.bil')
+fut.amt <- raster('future_ssp/processed/bio1.bil')
 
 # future annual precipitation
-fut.mat <- raster('future_ssp/processed/bio12.bil')
+fut.map <- raster('future_ssp/processed/bio12.bil')
 
 # elevation
 elev <- raster('envs/processed_full/elevation.tif')
@@ -345,16 +345,16 @@ extractr <- function(env.var, coords, var.name) {
 ##### extract environmental values
 
 ### 1. current annual mean temp
-current.amp <- extractr(env.var = cur.amp, coords = current.xy, var.name = 'AMT_current') 
-print(current.amp)
-head(current.amp[[1]])
+current.amt <- extractr(env.var = cur.amt, coords = current.xy, var.name = 'AMT_current') 
+print(current.amt)
+head(current.amt[[1]])
 
 # check mean values
 mean(current.amp[[1]]$AMT_current)
 
 
 ### 2. current annual precipitation
-current.pr <- extractr(env.var = cur.mat, coords = current.xy, var.name = 'MAP_current')
+current.pr <- extractr(env.var = cur.map, coords = current.xy, var.name = 'MAP_current')
 print(current.pr)
 head(current.pr[[1]])
 
@@ -363,16 +363,16 @@ mean(current.pr[[1]]$MAP_current)
 
 
 ### 3. future annual mean temperature
-future.amp <- extractr(env.var = fut.amp, coords = future.xy, var.name = 'AMT_future')
-print(future.amp)
-head(future.amp[[1]])
+future.amt <- extractr(env.var = fut.amt, coords = future.xy, var.name = 'AMT_future')
+print(future.amt)
+head(future.amt[[1]])
 
 # check mean value
 mean(future.amp[[1]]$AMT_future)
 
 
 ### 4. future annual precipitation
-future.pr <- extractr(env.var = fut.mat, coords = future.xy, var.name = 'MAP_future')
+future.pr <- extractr(env.var = fut.map, coords = future.xy, var.name = 'MAP_future')
 print(future.pr)
 head(future.pr[[1]])
 
