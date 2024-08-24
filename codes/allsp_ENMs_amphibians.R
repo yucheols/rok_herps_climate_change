@@ -12,7 +12,13 @@ options(scipen = 999)
 
 # create directory to store outputs for this test
 #dir.create('all_amphibians')
-#dir.create('all_amphibians/output_other')
+#dir.create('all_amphibians/output')
+#dir.create('all_amphibians/output/contrib')
+#dir.create('all_amphibians/output/models')
+#dir.create('all_amphibians/output/preds_current')
+#dir.create('all_amphibians/output/preds_future')
+#dir.create('all_amphibians/output/metrics')
+#dir.create('all_amphibians/output/other')
 #dir.create('all_amphibians/envs')
 #dir.create('all_amphibians/envs/PC_rasters')
 #dir.create('all_amphibians/bg')
@@ -90,7 +96,7 @@ occs <- rbind(gbif[, c(1,2,3)], nes[, c(1,2,3)])
 occs$lat <- as.numeric(occs$lat)
 occs$long <- as.numeric(occs$long)
 
-# make into a list
+# make into a list == exclude some species == e.g. new Hynobius species
 unique(occs$scientific_name)
 
 occs.list <- list(occs %>% filter(scientific_name == unique(scientific_name)[1]) %>% select(3,2),
@@ -98,10 +104,7 @@ occs.list <- list(occs %>% filter(scientific_name == unique(scientific_name)[1])
                   occs %>% filter(scientific_name == unique(scientific_name)[3]) %>% select(3,2),
                   occs %>% filter(scientific_name == unique(scientific_name)[4]) %>% select(3,2),
                   occs %>% filter(scientific_name == unique(scientific_name)[5]) %>% select(3,2),
-                  occs %>% filter(scientific_name == unique(scientific_name)[6]) %>% select(3,2),
                   occs %>% filter(scientific_name == unique(scientific_name)[7]) %>% select(3,2),
-                  occs %>% filter(scientific_name == unique(scientific_name)[8]) %>% select(3,2),
-                  occs %>% filter(scientific_name == unique(scientific_name)[9]) %>% select(3,2),
                   occs %>% filter(scientific_name == unique(scientific_name)[10]) %>% select(3,2),
                   occs %>% filter(scientific_name == unique(scientific_name)[11]) %>% select(3,2),
                   occs %>% filter(scientific_name == unique(scientific_name)[12]) %>% select(3,2),
@@ -119,6 +122,25 @@ occs.list <- list(occs %>% filter(scientific_name == unique(scientific_name)[1])
 occs.list.thin <- occs_thinner(occs_list = occs.list, envs = envs, long = 'long', lat = 'lat', spp_list = unique(occs$scientific_name))
 glimpse(occs.list.thin)
 
+# create a new taxon list since we dropped a few from the original list
+taxon.list <- list(unique(occs$scientific_name)[1],
+                   unique(occs$scientific_name)[2],
+                   unique(occs$scientific_name)[3],
+                   unique(occs$scientific_name)[4],
+                   unique(occs$scientific_name)[5],
+                   unique(occs$scientific_name)[7],
+                   unique(occs$scientific_name)[10],
+                   unique(occs$scientific_name)[11],
+                   unique(occs$scientific_name)[12],
+                   unique(occs$scientific_name)[13],
+                   unique(occs$scientific_name)[14],
+                   unique(occs$scientific_name)[15],
+                   unique(occs$scientific_name)[16],
+                   unique(occs$scientific_name)[17],
+                   unique(occs$scientific_name)[18],
+                   unique(occs$scientific_name)[19],
+                   unique(occs$scientific_name)[20],
+                   unique(occs$scientific_name)[21])
 
 #####  part 3 ::: sample background points ----------
 bg <- randomPoints(mask = envs[[1]], n = 10000) %>% as.data.frame()
@@ -128,8 +150,8 @@ head(bg)
 write.csv(bg, 'all_amphibians/bg/bg.csv')
 
 
-#####  part 4 ::: test candidate models per species ---------- 
-test.mod <- test_multisp(taxon.list = unique(occs$scientific_name),
+#####  part 4a ::: test candidate models per species ---------- 
+test.mod <- test_multisp(taxon.list = taxon.list,
                          occs.list = occs.list.thin,
                          envs = envs,
                          bg = bg,
@@ -138,3 +160,232 @@ test.mod <- test_multisp(taxon.list = unique(occs$scientific_name),
                          partitions = 'block',
                          partition.settings = list(orientation = 'lat_lon'),
                          type = 'type1')
+
+# save the model object
+#saveRDS(test.mod, 'all_amphibians/output_models/model_tuning.rds')
+
+# import saved model object
+#test.mod <- readRDS('all_amphibians/output_models/model_tuning.rds')
+
+#####  part 4b ::: view results ---------- 
+# print results
+print(test.mod$metrics)
+print(test.mod$models)
+print(test.mod$preds)
+print(test.mod$contrib)
+print(test.mod$taxon.list)
+
+# export metrics
+write.csv(test.mod$metrics, 'all_amphibians/output/metrics/model_metrics.csv')
+
+# export current prediction maps
+for (i in 1:nlayers(test.mod$preds)) {
+  r <- test.mod$preds[[i]]
+  name <- paste0('all_amphibians/output/preds_current/', test.mod$taxon.list[[i]], '_preds.tif')
+  writeRaster(r, filename = name, overwrite = T)
+}
+
+# export variable contribution 
+for (i in 1:length(test.mod$contrib)) {
+  c <- test.mod$contrib[[i]]
+  name <- paste0('all_amphibians/output/contrib/', test.mod$taxon.list[[i]], '_contrib.csv')
+  write.csv(c, name)
+}
+
+
+#####  part 5 ::: binary maps & ranges for current climate predictions ---------- 
+
+# get thresholds
+th <- get_thresh(preds = test.mod$preds, occs.list = occs.list.thin, type = 'p10')
+
+# get binary maps
+current.bin <- bin_maker(preds = test.mod$preds, th = th)
+names(current.bin) = taxon.list
+
+print(current.bin)
+plot(current.bin)
+
+# export current binary
+#dir.create('all_amphibians/output/bins_current')
+
+for (i in 1:nlayers(current.bin)) {
+  r <- current.bin[[i]]
+  name <- paste0('all_amphibians/output/bins_current/', names(current.bin)[[i]], '_bin.tif')
+  writeRaster(r, filename = name, overwrite = T)
+}
+
+
+# calculate current ranges
+current.range <- calc_ranges(bin.stack = current.bin, bin.labs = names(current.bin), digits = 0)
+print(current.range)
+
+
+#####  part 6 ::: climate change predictions // scenario == HadGEM3-GC31-LL_ssp585_2081-2100 ---------- 
+
+# load future layers
+envs.fut <- raster::stack(list.files(path = 'future_ssp/PC_rasters', pattern = '.bil$', full.names = T))
+print(envs.fut)
+
+# make future predictions
+future.pred <- model_predictr(model = test.mod$models, preds.list = envs.fut, pred.names = taxon.list, method = 'multi2single')
+print(future.pred)
+plot(future.pred)
+
+# export future predictions
+for (i in 1:nlayers(future.pred)) {
+  r <- future.pred[[i]]
+  name <- paste0('all_amphibians/output/preds_future/', names(future.pred)[[i]], '_preds_future.tif')
+  writeRaster(r, filename = name, overwrite = T)
+}
+
+
+#####  part 7 ::: binary maps & ranges for future climate predictions ---------- 
+
+# get  binary maps
+future.bin <- bin_maker(preds = future.pred, th = th)
+
+print(future.bin)
+plot(future.bin)
+
+# export future binary
+#dir.create('all_amphibians/output/bins_future')
+
+for (i in 1:nlayers(future.bin)) {
+  r <- future.bin[[i]]
+  name <- paste0('all_amphibians/output/bins_future/', names(future.bin)[[i]], '_bin_future.tif')
+  writeRaster(r, filename = name, overwrite = T)
+}
+
+# calculate future ranges
+future.range <- calc_ranges(bin.stack = future.bin, bin.labs = names(future.bin), digits = 0)
+print(future.range)
+
+
+#####  part 8 ::: range calculation within National Parks ---------- 
+
+# import Korea NP borders file
+knp <- rgdal::readOGR('poly/KNP_boundaries/NLPRK_BNDRY.shp')
+
+### current
+# mask to NP borders
+current.knp <- raster::mask(current.bin, knp)
+plot(current.knp)
+
+# calculate current ranges within NP
+current.range.knp <- calc_ranges(bin.stack = current.knp, bin.labs = names(current.knp), digits = 0) 
+print(current.range.knp)
+
+### future
+# mask to NP borders
+future.knp <- raster::mask(future.bin, knp)
+plot(future.knp)
+
+# calculate future ranges within NP
+future.range.knp <- calc_ranges(bin.stack = future.knp, bin.labs = names(future.knp), digits = 0)
+print(future.range.knp)
+
+
+#####  part 9 ::: GIS calculations ---------- 
+# current annual mean temperature
+cur.amp <- raster('envs/processed_full/bio1.tif')
+
+# current annual precipitation
+cur.mat <- raster('envs/processed_full/bio12.tif')
+
+# future annual mean temperature
+fut.amp <- raster('future_ssp/processed/bio1.bil')
+
+# future annual precipitation
+fut.mat <- raster('future_ssp/processed/bio12.bil')
+
+# elevation
+elev <- raster('envs/processed_full/elevation.tif')
+
+# function to convert binary suitable pixels to coordinates
+bin2coords <- function(bin) {
+  output <- list()
+  
+  for (i in 1:nlayers(bin)) {
+    bin[[i]][bin[[i]] < 1] <- NA
+    locs <- raster::xyFromCell(bin[[i]], cell = 1:ncell(bin[[i]])) %>% as.data.frame()
+    colnames(locs) = c('long', 'lat')
+    output[[i]] <- locs
+  }
+  return(output)
+}
+
+# convert current binary suitable pixels to coords
+current.xy <- bin2coords(bin = current.bin)
+print(current.xy)
+
+# convert future binary suitable pixels to coords
+future.xy <- bin2coords(bin = future.bin)
+print(future.xy)
+
+# function for batch extraction of environmental values
+extractr <- function(env.var, coords, var.name) {
+  output <- list()
+  
+  for (i in 1:length(coords)) {
+    ext <- raster::extract(env.var, coords[[i]]) %>% as.data.frame() %>% na.omit()
+    colnames(ext) = var.name
+    output[[i]] <- ext
+  }
+  return(output)
+}
+
+##### extract environmental values
+
+### 1. current annual mean temp
+current.amp <- extractr(env.var = cur.amp, coords = current.xy, var.name = 'AMT_current') 
+print(current.amp)
+head(current.amp[[1]])
+
+# check mean values
+mean(current.amp[[1]]$AMT_current)
+
+
+### 2. current annual precipitation
+current.pr <- extractr(env.var = cur.mat, coords = current.xy, var.name = 'MAP_current')
+print(current.pr)
+head(current.pr[[1]])
+
+# check mean value
+mean(current.pr[[1]]$MAP_current)
+
+
+### 3. future annual mean temperature
+future.amp <- extractr(env.var = fut.amp, coords = future.xy, var.name = 'AMT_future')
+print(future.amp)
+head(future.amp[[1]])
+
+# check mean value
+mean(future.amp[[1]]$AMT_future)
+
+
+### 4. future annual precipitation
+future.pr <- extractr(env.var = fut.mat, coords = future.xy, var.name = 'MAP_future')
+print(future.pr)
+head(future.pr[[1]])
+
+# check mean value
+mean(future.pr[[1]]$MAP_future)
+
+
+### 5. current elevation
+current.elev <- extractr(env.var = elev, coords = current.xy, var.name = 'current_elev')
+print(current.elev)
+head(current.elev[[1]])
+
+# check mean value
+mean(current.elev[[1]]$current_elev)
+
+
+### 6. future elevation
+future.elev <- extractr(env.var = elev, coords = future.xy, var.name = 'future_elev')
+print(future.elev)
+head(future.elev[[1]])
+
+# check mean value
+mean(future.elev[[1]]$future_elev)
+
