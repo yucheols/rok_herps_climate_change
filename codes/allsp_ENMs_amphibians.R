@@ -60,7 +60,7 @@ rev(sort(get_contrib[[4]]))  # bio14 (17.84 %) ... bio2 (16.23 %) == precip of d
 rev(sort(get_contrib[[5]]))  # bio3 (34.08 %) ... slope (16.62 %) == isothermality and slope
 
 # export loading contributions
-write.csv(get_contrib, 'all_amphibians/output_other/current_envs_raster_PC_var_contrib.csv')
+write.csv(get_contrib, 'all_amphibians/output/other/current_envs_raster_PC_var_contrib.csv')
 
 # set new env object
 envs <- envs.pca$rasters[[1:5]]
@@ -350,7 +350,7 @@ print(current.amt)
 head(current.amt[[1]])
 
 # check mean values
-mean(current.amp[[1]]$AMT_current)
+mean(current.amt[[1]]$AMT_current)
 
 
 ### 2. current annual precipitation
@@ -368,7 +368,7 @@ print(future.amt)
 head(future.amt[[1]])
 
 # check mean value
-mean(future.amp[[1]]$AMT_future)
+mean(future.amt[[1]]$AMT_future)
 
 
 ### 4. future annual precipitation
