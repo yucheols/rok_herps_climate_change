@@ -123,12 +123,6 @@ occs.list <- list(occs %>% filter(scientific_name == unique(scientific_name)[1])
 occs.list.thin <- occs_thinner(occs_list = occs.list, envs = envs, long = 'long', lat = 'lat', spp_list = unique(occs$scientific_name))
 glimpse(occs.list.thin)
 
-# export processed occurrence points
-for (i in 1:length(occs.list.thin)) {
-  o <- occs.list.thin[[i]]
-  name <- paste0('all_amphibians/occs_processed/', taxon.list[[i]], '.csv')
-  write.csv(o, name)
-}
 
 # create a new taxon list since we dropped a few from the original list
 taxon.list <- list(unique(occs$scientific_name)[1],
@@ -149,6 +143,14 @@ taxon.list <- list(unique(occs$scientific_name)[1],
                    unique(occs$scientific_name)[19],
                    unique(occs$scientific_name)[20],
                    unique(occs$scientific_name)[21])
+
+
+# export processed occurrence points
+for (i in 1:length(occs.list.thin)) {
+  o <- occs.list.thin[[i]]
+  name <- paste0('all_amphibians/occs_processed/', taxon.list[[i]], '.csv')
+  write.csv(o, name)
+}
 
 #####  part 3 ::: sample background points ----------
 bg <- randomPoints(mask = envs[[1]], n = 10000) %>% as.data.frame()

@@ -19,7 +19,7 @@ NODATA          -339999999999999996128486808808066248288
 The below is additional metadata, not part of the BIL/HDR format
 ----------------------------------------------------------------
 CREATOR=R package:x
-CREATED= 2024-09-03 11:07:40 
+CREATED= 2024-09-03 11:27:17 
 Projection= +proj=longlat +datum=WGS84 +no_defs 
 MinValue= -12.13269 
 MaxValue= 10.19841 
