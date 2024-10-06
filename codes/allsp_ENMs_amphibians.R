@@ -316,8 +316,9 @@ bin2coords <- function(bin) {
   output <- list()
   
   for (i in 1:nlayers(bin)) {
-    bin[[i]][bin[[i]] < 1] <- NA
-    locs <- raster::xyFromCell(bin[[i]], cell = 1:ncell(bin[[i]])) %>% as.data.frame()
+    r <- bin[[i]]
+    locs.which <- which(r[] == 1)
+    locs <- raster::xyFromCell(r, locs.which) %>% as.data.frame() %>% na.omit()
     colnames(locs) = c('long', 'lat')
     output[[i]] <- locs
   }
@@ -352,8 +353,9 @@ print(current.amt)
 head(current.amt[[1]])
 
 # check mean values
-mean(current.amt[[1]]$AMT_current)
-
+for (i in 1:length(current.amt)) {
+  print(mean(current.amt[[i]]$AMT_current))
+}
 
 ### 2. current annual precipitation
 current.pr <- extractr(env.var = cur.map, coords = current.xy, var.name = 'MAP_current')
@@ -361,7 +363,9 @@ print(current.pr)
 head(current.pr[[1]])
 
 # check mean value
-mean(current.pr[[1]]$MAP_current)
+for (i in 1:length(current.pr)) {
+  print(mean(current.pr[[i]]$MAP_current))
+}
 
 
 ### 3. future annual mean temperature
@@ -370,7 +374,9 @@ print(future.amt)
 head(future.amt[[1]])
 
 # check mean value
-mean(future.amt[[1]]$AMT_future)
+for (i in 1:length(future.amt)) {
+  print(mean(future.amt[[i]]$AMT_future))
+}
 
 
 ### 4. future annual precipitation
@@ -379,7 +385,9 @@ print(future.pr)
 head(future.pr[[1]])
 
 # check mean value
-mean(future.pr[[1]]$MAP_future)
+for (i in 1:length(future.pr)) {
+  print(mean(future.pr[[i]]$MAP_future))
+}
 
 
 ### 5. current elevation
@@ -388,7 +396,9 @@ print(current.elev)
 head(current.elev[[1]])
 
 # check mean value
-mean(current.elev[[1]]$current_elev)
+for (i in 1:length(current.elev)) {
+  print(mean(current.elev[[i]]$current_elev))
+}
 
 
 ### 6. future elevation
@@ -397,5 +407,7 @@ print(future.elev)
 head(future.elev[[1]])
 
 # check mean value
-mean(future.elev[[1]]$future_elev)
+for (i in 1:length(future.elev)) {
+  print(mean(future.elev[[i]]$future_elev))
+}
 
